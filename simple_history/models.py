@@ -146,7 +146,7 @@ class HistoricalRecords(object):
         attrs = {}
         for field in instance._meta.fields:
             if isinstance(field, models.ForeignKey):
-                attrs[field.name] = getattr(instance, field.attname)
+                attrs[field.name] = getattr(instance, field.name)
             else:
                 attrs[field.attname] = getattr(instance, field.attname)
         manager.create(history_type=type, changed_by=changed_by, **attrs)
