@@ -58,6 +58,7 @@ class HistoricalRecords(object):
 
             if isinstance(field, models.ForeignKey):
                 field.__class__ = models.IntegerField
+                field.name = field.attname
                 #ughhhh. open to suggestions here
                 try:
                     field.rel = None
@@ -99,15 +100,6 @@ class HistoricalRecords(object):
         Returns a dictionary of fields that will be added to the historical
         record model, in addition to the ones returned by copy_fields below.
         """
-        @models.permalink
-        def revert_url(self):
-            opts = model._meta
-            return ('%s:%s_%s_simple_history' %
-                    (admin.site.name, opts.app_label, opts.module_name),
-                    [getattr(self, opts.pk.attname), self.history_id])
-        def get_instance(self):
-            return model(**dict([(k, getattr(self, k)) for k in fields]))
-
         rel_nm = '_%s_history' % model._meta.object_name.lower()
         return {
             'history_id': models.AutoField(primary_key=True),
@@ -118,9 +110,6 @@ class HistoricalRecords(object):
                 ('-', 'Deleted'),
             )),
             'history_object': HistoricalObjectDescriptor(model),
-            'changed_by': models.ForeignKey(User, null=True),
-            'instance': property(get_instance),
-            'revert_url': revert_url,
             '__unicode__': lambda self: u'%s as of %s' % (self.history_object,
                                                           self.history_date)
         }
@@ -145,10 +134,7 @@ class HistoricalRecords(object):
         manager = getattr(instance, self.manager_name)
         attrs = {}
         for field in instance._meta.fields:
-            if isinstance(field, models.ForeignKey):
-                attrs[field.name] = getattr(instance, field.name)
-            else:
-                attrs[field.attname] = getattr(instance, field.attname)
+            attrs[field.attname] = getattr(instance, field.attname)
         manager.create(history_type=type, changed_by=changed_by, **attrs)
 
 class HistoricalObjectDescriptor(object):
