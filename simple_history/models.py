@@ -135,7 +135,7 @@ class HistoricalRecords(object):
         attrs = {}
         for field in instance._meta.fields:
             attrs[field.attname] = getattr(instance, field.attname)
-        manager.create(history_type=type, changed_by=changed_by, **attrs)
+        manager.create(history_type=type, **attrs)
 
 class HistoricalObjectDescriptor(object):
     def __init__(self, model):
